@@ -518,19 +518,10 @@ group: { name: "Групповое", icon: "👥" }
 let state = { enabled: true, active: [], intensity: 'medium', chance: 70, custom: [], searchQuery: '' };
 
 
-// Drag functionality for elements
+// Drag functionality for elements (resets to original position on page refresh)
 function makeDraggable($element, $handle) {
     let isDragging = false;
     let currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
-
-    // Load saved position
-    const savedPos = localStorage.getItem(`fm-pos-${$element.attr('id')}`);
-    if (savedPos) {
-        const pos = JSON.parse(savedPos);
-        $element.css({ top: pos.top + 'px', left: pos.left + 'px', right: 'auto', bottom: 'auto' });
-        xOffset = pos.left;
-        yOffset = pos.top;
-    }
 
     $handle.on('mousedown touchstart', function(e) {
         if (e.type === "touchstart") {
@@ -575,12 +566,6 @@ function makeDraggable($element, $handle) {
         if (isDragging) {
             isDragging = false;
             $element.css({ transition: '' });
-
-            // Save position
-            localStorage.setItem(`fm-pos-${$element.attr('id')}`, JSON.stringify({
-                top: yOffset,
-                left: xOffset
-            }));
         }
     });
 }
@@ -687,7 +672,7 @@ function updateUI() {
         count > 0
         ? state.active.map(k => {
             const f = FETISHES[k] || state.custom.find(c => c.id === k);
-            return f ? `<span class="active-fetish-tag" data-key="${k}"><span class="fetish-tag-content">${f.icon || '🔹'} ${f.name}</span><span class="fetish-tag-remove">×</span></span>` : '';
+            return f ? `<span class="active-fetish-tag">${f.icon || '🔹'} ${f.name}</span>` : '';
         }).join('')
         : '<span class="no-fetishes">✦ Не выбрано</span>'
     );
@@ -830,16 +815,6 @@ jQuery(async () => {
 
     $('#fm-clear-all').on('click', clearAll);
     $('#fm-random-5').on('click', handleRandomSelection);
-
-    // Event delegation for removing individual fetishes via X button
-    $(document).on('click', '.fetish-tag-remove', function(e) {
-        e.stopPropagation();
-        const tag = $(this).closest('.active-fetish-tag');
-        const key = tag.data('key');
-        if (key) {
-            toggle(key);
-        }
-    });
 
     renderCategories();
     updateUI();
